@@ -8,13 +8,13 @@ VALUES("Engineering"),
 
 INSERT INTO role(title,salary,department_id)
 VALUES("Software Engineer",120000,1),1
-        ("Sales Lead",100000,4),2
-        ("Salesperson",80000,4),3
-        ("Account Manager",160000,2),4
-        ("Accountant",125000,2),5
-        ("Legal Team Lead",250000,3),6
-        ("Lawyer",190000,3),7
-        ("Lead Engineer",150000,1)8
+        ("Sales Lead",100000,4),
+        ("Salesperson",80000,4),
+        ("Account Manager",160000,2),
+        ("Accountant",125000,2),
+        ("Legal Team Lead",250000,3),
+        ("Lawyer",190000,3),
+        ("Lead Engineer",150000,1)
 
 
 INSERT INTO employee(first_name,last_name,role_id,manager_id)
