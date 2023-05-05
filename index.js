@@ -113,7 +113,7 @@ const addDepartment = () => {
       const sql = "INSERT INTO department(dep_name) VALUES(?)";
       db.query(sql, res.depName, (err, rows) => {
         if (err) {
-          console.log("ERRor");
+          console.log("Error");
           return;
         }
         console.log("Added " + res.depName + "to the database");
@@ -176,7 +176,12 @@ const addEmployee = () => {
   ]);
   main();
 };
+//NEED todo proper error handling
+//NEED todo proper validation
+//NEED toto .env(secure password)
+
 //TODO UPDATE an empoyee's role
 //DELETE an employee
+//If get time async and await(try/catch)
 
 main();

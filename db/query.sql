@@ -12,7 +12,7 @@
 -- LEFT join role ON role.id= employee.role_id 
 -- LEFT join department ON department.id= role.department_id 
 -- left join employee AS manager ON employee.manager_id = manager.id
--- ;
+;
 
 -- 4. Add a department
     INSERT INTO department(dep_name) VALUES(?);
