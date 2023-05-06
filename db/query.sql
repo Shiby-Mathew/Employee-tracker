@@ -29,6 +29,7 @@
 
 -- add an employee
 -- first name ,last name role,manager
+ INSERT INTO employee(first_name,last_name,role_id,manager_id) VALUES(?,?,?,?);
 
 -- update an employee role
 -- update new role

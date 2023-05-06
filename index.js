@@ -1,5 +1,6 @@
 const inquirer = require("inquirer");
-const cTable = require("console.table");
+// const cTable = require("console.table");
+require("console.table");
 const mysql = require("mysql2");
 
 //TODO Change password in .env file
@@ -145,7 +146,6 @@ const addRole = () => {
           name: "salary",
         },
 
-        //TODO how to get all department from database
         {
           type: "list",
           message: "Which department does the role belong to?",
@@ -173,44 +173,102 @@ const addRole = () => {
               return;
             } else {
               console.log("Added role to the database");
+              main();
             }
           }
         );
       });
   });
-
-  // main();
 };
 
 //TODO need to get values
 const addEmployee = () => {
-  inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the employee's first name?",
-      name: "firstName",
-    },
-    {
-      type: "input",
-      message: "What is the employee's last name?",
-      name: "lastName",
-    },
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "What is the employee's first name?",
+        name: "firstName",
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "lastName",
+      },
+    ])
     //TODO need to get values
-    {
-      type: "list",
-      message: "What is the employee's role?",
-      name: "empRole",
-      choices: ["list"],
-    },
-    {
-      type: "list",
-      message: "Who is the employee's manager?",
-      name: "empManager",
-      choices: ["list"],
-    },
-  ]);
+    .then((answer) => {
+      //const employeeDetails = [answer.firstName, answer.lastName];
+      const sql = "SELECT id,title FROM role";
+      db.query(sql, (err, rows) => {
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              message: "What is the employee's role?",
+              name: "empRole",
+              choices: rows.map((roleName) => {
+                return roleName.title;
+              }),
+            },
+          ])
+          .then((data) => {
+            console.log(data);
+            //console.log([answer.firstName, answer.lastName]);
+            const employeeArray = rows.filter((emp) => {
+              return emp.title == data.empRole;
+            });
+            console.log(employeeArray);
+            //employeeArray[0].id
 
-  main();
+            //Adding manger to employee
+            const sql = "SELECT * FROM employee";
+            db.query(sql, (err, rows) => {
+              inquirer
+                .prompt([
+                  {
+                    type: "list",
+                    message: "Who is the employee's manager?",
+                    name: "mgrRole",
+                    choices: rows.map((empName) => {
+                      return empName.first_name + " " + empName.last_name;
+                      //+ "" + roleName.lastName;
+                    }),
+                  },
+                ])
+                .then((data) => {
+                  console.log(data);
+                  const mgrArray = rows.filter((mgr) => {
+                    return mgr.first_name + " " + mgr.last_name == data.mgrRole;
+                  });
+                  console.log(mgrArray); //mgrArray[0].id
+                  console.log(mgrArray[0].id);
+                  //sql for insert
+                  const sql =
+                    " INSERT INTO employee(first_name,last_name,role_id,manager_id) VALUES(?,?,?,?)";
+                  db.query(
+                    sql,
+                    [
+                      answer.firstName,
+                      answer.lastName,
+                      employeeArray[0].id,
+                      mgrArray[0].id,
+                    ],
+                    (err, result) => {
+                      if (err) {
+                        console.log(err);
+                        return;
+                      } else {
+                        console.log("Added employee to the database");
+                        main();
+                      }
+                    }
+                  );
+                });
+            }); //employee sql
+          });
+      }); //dbquery
+    }); //.then
 };
 
 //NEED todo proper error handling
