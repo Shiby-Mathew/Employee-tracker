@@ -30,6 +30,8 @@ const main = () => {
           "Add Department",
           "Add Role",
           "Add Employee",
+          "Update Employee Role",
+          "Quit",
         ],
       },
     ])
@@ -56,6 +58,10 @@ const main = () => {
       if (choices === "Add Employee") {
         console.log("inside choices");
         addEmployee();
+      }
+      if (choices === "Quit") {
+        // quit();
+        process.exit();
       }
     });
 }; //main
@@ -124,27 +130,56 @@ const addDepartment = () => {
 
 //NEED to complete
 const addRole = () => {
-  inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the name of the role?",
-      name: "roleName",
-    },
-    {
-      type: "input",
-      message: "What is the salary of the role?",
-      name: "salary",
-    },
+  const sql = "SELECT id,dep_name from department";
+  db.query(sql, (err, rows) => {
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "What is the name of the role?",
+          name: "roleName",
+        },
+        {
+          type: "number",
+          message: "What is the salary of the role?",
+          name: "salary",
+        },
 
-    //TODO how to get all department from database
-    {
-      type: "list",
-      message: "Which department does the role belong to?",
-      name: "department",
-      choices: ["list"],
-    },
-  ]);
-  main();
+        //TODO how to get all department from database
+        {
+          type: "list",
+          message: "Which department does the role belong to?",
+          name: "department",
+          choices: rows.map((depName) => {
+            return depName.dep_name;
+          }),
+        },
+      ])
+      .then((data) => {
+        console.log(data);
+        const roleArray = rows.filter((dep) => {
+          console.log(dep.dep_name.trim == data.department.trim);
+          return dep.dep_name == data.department;
+        });
+        console.log(roleArray);
+        const sql =
+          "INSERT INTO role(title,salary,department_id) VALUES (?,?,?)";
+        db.query(
+          sql,
+          [data.roleName, data.salary, roleArray[0].id],
+          (err, result) => {
+            if (err) {
+              console.log(err);
+              return;
+            } else {
+              console.log("Added role to the database");
+            }
+          }
+        );
+      });
+  });
+
+  // main();
 };
 
 //TODO need to get values
@@ -174,11 +209,14 @@ const addEmployee = () => {
       choices: ["list"],
     },
   ]);
+
   main();
 };
+
 //NEED todo proper error handling
 //NEED todo proper validation
-//NEED toto .env(secure password)
+//NEED todo .env(secure password)
+//quit();TODO
 
 //TODO UPDATE an empoyee's role
 //DELETE an employee
