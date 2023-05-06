@@ -2,6 +2,7 @@ const inquirer = require("inquirer");
 // const cTable = require("console.table");
 require("console.table");
 const mysql = require("mysql2");
+require("dotenv").config();
 
 //TODO Change password in .env file
 // Connect to database
@@ -9,12 +10,14 @@ const db = mysql.createConnection(
   {
     host: "localhost",
     user: "root",
-    password: "root",
+    password: process.env.MYSQL_PASSWORD,
     database: "employee_db",
   },
   console.log(`Connected to the employee_db database.`)
 );
 
+//DATABASE_PASSWORD='root'
+//process.env.MYSQL_PASSWORD,
 //main function
 const main = () => {
   //prompt asking for user inputs
@@ -102,6 +105,7 @@ const showAllEmployees = () => {
   console.log("All Employees");
   const sql =
     "SELECT employee.id,employee.first_name,employee.last_name,role.title,department.dep_name AS department,role.salary,manager.first_name AS manager FROM employee LEFT join role ON role.id= employee.role_id LEFT join department ON department.id = role.department_id LEFT JOIN employee AS manager ON employee.manager_id = manager.id";
+  //TODO CONCAT(manager.first_name," ",manager.last_name)AS manager
   db.query(sql, (err, rows) => {
     if (err) {
       console.log("ERRor");
@@ -283,20 +287,60 @@ const addEmployee = () => {
 
 //UPDATE an empoyee's role
 const updateEmployee = () => {
-  const sql = "SELECT id,dep_name FROM department";
+  const sql = "SELECT * FROM employee";
   db.query(sql, (err, rows) => {
-    inquirer.prompt([
-      {
-        type: "list",
-        message: "Which employee's role do you want to update?",
-        name: "department",
-        choices: rows.map((depName) => {
-          return depName.dep_name;
-        }),
-      },
-    ]);
-  });
-};
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          message: "Which employee's role do you want to update?",
+          name: "name",
+          choices: rows.map((empName) => {
+            return empName.first_name + " " + empName.last_name;
+          }),
+        },
+      ])
+      .then((data) => {
+        console.log(data);
+        const updateEmp = rows.filter((emp) => {
+          return emp.first_name + " " + emp.last_name == data.name;
+        });
+        console.log(updateEmp); //updateEmp[0].id
+        const sql = "SELECT * FROM role";
+        db.query(sql, (err, rows) => {
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                message:
+                  "Which role do you want to assign the selected employee?",
+                name: "role",
+                choices: rows.map((empRole) => {
+                  return empRole.title;
+                }),
+              },
+            ])
+            .then((data) => {
+              console.log(data);
+              const newRole = rows.filter((role) => {
+                return role.title == data.role;
+              });
+              console.log(newRole); //newRole[0].id
+              const sql = "UPDATE employee SET role_id = ? WHERE id = ?";
+              db.query(sql, [newRole[0].id, updateEmp[0].id], (err, result) => {
+                if (err) {
+                  console.log(err);
+                  return;
+                } else {
+                  console.log(`Updated employee's role`);
+                  main();
+                }
+              });
+            }); //.tthen
+        }); //dbquery role
+      }); //.then employee
+  }); //dbquery Employee
+}; //update Employee
 
 //NEED todo proper error handling
 //NEED todo proper validation
