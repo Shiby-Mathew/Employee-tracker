@@ -365,4 +365,6 @@ const deleteEmployee = () => {
   });
 };
 
+//view employee by manager
+
 main();
