@@ -32,6 +32,7 @@ const main = () => {
           "Add Employee",
           "Update Employee Role",
           "Delete Employee Role",
+          "View Employee By Manager",
           "Quit",
         ],
       },
@@ -65,7 +66,10 @@ const main = () => {
         console.log("inside choices");
         deleteEmployee();
       }
-
+      if (choices === "View Employee By Manager") {
+        console.log("inside choices");
+        managerEmp();
+      }
       if (choices === "Quit") {
         process.exit();
       }
@@ -366,5 +370,18 @@ const deleteEmployee = () => {
 };
 
 //view employee by manager
+
+const managerEmp = async () => {
+  console.log("Employee and their manager");
+  try {
+    const sql =
+      'SELECT CONCAT(manager.first_name," ",manager.last_name) AS manager,CONCAT(employee.first_name," ",employee.last_name) AS employee FROM employee join employee AS manager ON employee.manager_id = manager.id';
+    const [rows, fields] = await db.promise().query(sql);
+    console.table(rows);
+    main();
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 main();

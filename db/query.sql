@@ -34,6 +34,10 @@
 -- update an employee role
 -- update new role
 
+-- employeeby manager
+SELECT CONCAT(manager.first_name," ",manager.last_name) AS manager,CONCAT(employee.first_name," ",employee.last_name) AS employee
+FROM employee join employee AS manager ON employee.manager_id = manager.id;
+
 
 --  use employee_db;
 
