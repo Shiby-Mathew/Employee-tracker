@@ -1,23 +1,19 @@
 const inquirer = require("inquirer");
-// const cTable = require("console.table");
+
 require("console.table");
 const mysql = require("mysql2");
 require("dotenv").config();
 
-//TODO Change password in .env file
-// Connect to database
-const db = mysql.createConnection(
+const db = mysql.createPool(
   {
     host: "localhost",
     user: "root",
     password: process.env.MYSQL_PASSWORD,
     database: "employee_db",
   },
-  console.log(`Connected to the employee_db database.`)
+  console.log(`Connected to the  employee_db database.`)
 );
 
-//DATABASE_PASSWORD='root'
-//process.env.MYSQL_PASSWORD,
 //main function
 const main = () => {
   //prompt asking for user inputs
@@ -35,6 +31,7 @@ const main = () => {
           "Add Role",
           "Add Employee",
           "Update Employee Role",
+          "Delete Employee Role",
           "Quit",
         ],
       },
@@ -62,9 +59,13 @@ const main = () => {
         addEmployee();
       }
       if (choices === "Update Employee Role") {
-        console.log("inside choices");
         updateEmployee();
       }
+      if (choices === "Delete Employee Role") {
+        console.log("inside choices");
+        deleteEmployee();
+      }
+
       if (choices === "Quit") {
         process.exit();
       }
@@ -72,48 +73,46 @@ const main = () => {
 }; //main
 
 //Show all departments
-const showDepartment = () => {
+const showDepartment = async () => {
   console.log("All departments");
-  const sql = "SELECT id,dep_name AS department FROM department";
-  db.query(sql, (err, rows) => {
-    if (err) {
-      console.log("ERRor");
-      return;
-    }
+  try {
+    const sql = "SELECT id,dep_name AS department FROM department";
+    const [rows, fields] = await db.promise().query(sql);
     console.table(rows);
     main();
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 //Show all Roles from the database
-const showRoles = () => {
+const showRoles = async () => {
   console.log("All Roles");
-  const sql =
-    "SELECT role.id,role.title,department.dep_name AS department,role.salary FROM role LEFT JOIN department ON department.id = role.department_id ORDER BY role.id ";
-  db.query(sql, (err, rows) => {
-    if (err) {
-      console.log("ERRor");
-      return;
-    }
+  try {
+    const sql =
+      "SELECT role.id,role.title,department.dep_name AS department,role.salary FROM role LEFT JOIN department ON department.id = role.department_id ORDER BY role.id ";
+    const [rows, fields] = await db.promise().query(sql);
     console.table(rows);
     main();
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 //Show all Employees
-const showAllEmployees = () => {
+const showAllEmployees = async () => {
   console.log("All Employees");
-  const sql =
-    "SELECT employee.id,employee.first_name,employee.last_name,role.title,department.dep_name AS department,role.salary,manager.first_name AS manager FROM employee LEFT join role ON role.id= employee.role_id LEFT join department ON department.id = role.department_id LEFT JOIN employee AS manager ON employee.manager_id = manager.id";
-  //TODO CONCAT(manager.first_name," ",manager.last_name)AS manager
-  db.query(sql, (err, rows) => {
-    if (err) {
-      console.log("ERRor");
-      return;
-    }
+
+  try {
+    const sql =
+      'SELECT employee.id,employee.first_name,employee.last_name,role.title,department.dep_name AS department,role.salary,CONCAT(manager.first_name," ",manager.last_name) AS manager FROM employee LEFT join role ON role.id= employee.role_id LEFT join department ON department.id = role.department_id LEFT JOIN employee AS manager ON employee.manager_id = manager.id';
+    //TODO CONCAT(manager.first_name," ",manager.last_name)AS manager
+    const [rows, fields] = await db.promise().query(sql);
     console.table(rows);
     main();
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 //Add a new department
@@ -127,7 +126,6 @@ const addDepartment = () => {
       },
     ])
     .then((res) => {
-      // console.log(res);
       const sql = "INSERT INTO department(dep_name) VALUES(?)";
       db.query(sql, res.depName, (err, rows) => {
         if (err) {
@@ -141,55 +139,52 @@ const addDepartment = () => {
 };
 
 // Add a new Role
-const addRole = () => {
+const addRole = async () => {
   const sql = "SELECT id,dep_name FROM department";
-  db.query(sql, (err, rows) => {
-    inquirer
-      .prompt([
-        {
-          type: "input",
-          message: "What is the name of the role?",
-          name: "roleName",
-        },
-        {
-          type: "number",
-          message: "What is the salary of the role?",
-          name: "salary",
-        },
+  const [rows, fields] = await db.promise().query(sql);
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "What is the name of the role?",
+        name: "roleName",
+      },
+      {
+        type: "number",
+        message: "What is the salary of the role?",
+        name: "salary",
+      },
 
-        {
-          type: "list",
-          message: "Which department does the role belong to?",
-          name: "department",
-          choices: rows.map((depName) => {
-            return depName.dep_name;
-          }),
-        },
-      ])
-      .then((data) => {
-        //console.log(data);
-        const roleArray = rows.filter((dep) => {
-          // console.log(dep.dep_name.trim == data.department.trim);
-          return dep.dep_name == data.department;
-        });
-        // console.log(roleArray);
-        const sql =
-          "INSERT INTO role(title,salary,department_id) VALUES (?,?,?)";
-        db.query(
-          sql,
-          [data.roleName, data.salary, roleArray[0].id],
-          (err, result) => {
-            if (err) {
-              console.log(err);
-              return;
-            } else {
-              console.log(`Added ${data.roleName} to the database`);
-              main();
-            }
-          }
-        );
+      {
+        type: "list",
+        message: "Which department does the role belong to?",
+        name: "department",
+        choices: rows.map((depName) => {
+          return depName.dep_name;
+        }),
+      },
+    ])
+    .then((data) => {
+      const roleArray = rows.filter((dep) => {
+        return dep.dep_name == data.department;
       });
-  });
+
+      const sql = "INSERT INTO role(title,salary,department_id) VALUES (?,?,?)";
+      db.query(
+        sql,
+        [data.roleName, data.salary, roleArray[0].id],
+        (err, result) => {
+          if (err) {
+            console.log(err);
+            return;
+          } else {
+            console.log(`Added ${data.roleName} to the database`);
+            main();
+          }
+        }
+      );
+    });
+  // });
 };
 
 //Add a new employee to the database
@@ -224,13 +219,9 @@ const addEmployee = () => {
             },
           ])
           .then((data) => {
-            //console.log(data);
-
             const employeeArray = rows.filter((emp) => {
               return emp.title == data.empRole;
             });
-            //console.log(employeeArray);
-            //employeeArray[0].id
 
             //List out all the employees name
             const sql = "SELECT * FROM employee";
@@ -243,7 +234,6 @@ const addEmployee = () => {
                     name: "mgrRole",
                     choices: rows.map((empName) => {
                       return empName.first_name + " " + empName.last_name;
-                      //+ "" + roleName.lastName;
                     }),
                   },
                 ])
@@ -252,10 +242,7 @@ const addEmployee = () => {
                   const mgrArray = rows.filter((mgr) => {
                     return mgr.first_name + " " + mgr.last_name == data.mgrRole;
                   });
-                  // console.log(mgrArray); //mgrArray[0].id
-                  // console.log(mgrArray[0].id);
 
-                  //Insert new employee values in employee table
                   const sql =
                     " INSERT INTO employee(first_name,last_name,role_id,manager_id) VALUES(?,?,?,?)";
                   db.query(
@@ -342,12 +329,40 @@ const updateEmployee = () => {
   }); //dbquery Employee
 }; //update Employee
 
-//NEED todo proper error handling
-//NEED todo proper validation
-//NEED todo .env(secure password)
-//quit();TODO
+//DELETE an employee from database
 
-//DELETE an employee
-//If get time async and await(try/catch)
+const deleteEmployee = () => {
+  const sql = "SELECT * FROM employee";
+  db.query(sql, (err, rows) => {
+    inquirer
+      .prompt([
+        {
+          type: "list",
+          message: "Which employee do you want to delete?",
+          name: "name",
+          choices: rows.map((empName) => {
+            return empName.first_name + " " + empName.last_name;
+          }),
+        },
+      ])
+      .then((data) => {
+        console.log(data);
+        const deleteEmp = rows.filter((emp) => {
+          return emp.first_name + " " + emp.last_name == data.name;
+        });
+        console.log(deleteEmp);
+        const sql = "DELETE  FROM employee WHERE id = ?";
+        db.query(sql, [deleteEmp[0].id], (err, result) => {
+          if (err) {
+            console.log(err);
+            return;
+          } else {
+            console.log(`Deleted an employee`);
+            
+          }
+        });
+      });
+  });
+};
 
 main();
