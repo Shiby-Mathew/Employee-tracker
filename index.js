@@ -188,7 +188,6 @@ const addRole = async () => {
         }
       );
     });
-  // });
 };
 
 //Add a new employee to the database
