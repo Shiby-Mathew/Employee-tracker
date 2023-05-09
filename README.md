@@ -60,7 +60,7 @@ MYSQL/MySQL2
 
 ## Walk through video
 
-[![Walk through video](https://drive.google.com/file/d/12FofhR61P6Hz7czVxDjPUcgVV9_3wgjt/view.png)](https://drive.google.com/file/d/12FofhR61P6Hz7czVxDjPUcgVV9_3wgjt/view)
+[![Walk through video](https://drive.google.com/file/d/1srG07J2ej9IuN454ZRN_SnmXM8WuMZpd/view.png)](https://drive.google.com/file/d/1srG07J2ej9IuN454ZRN_SnmXM8WuMZpd/view)
 
 ## Usage
 

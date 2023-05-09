@@ -23,6 +23,7 @@ const main = () => {
           "Update Employee Role",
           "Delete Employee Role",
           "View Employee By Manager",
+          "Budget",
           "Quit",
         ],
       },
@@ -60,6 +61,11 @@ const main = () => {
         //console.log("inside choices");
         managerEmp();
       }
+      if (choices === "Budget") {
+        //console.log("inside choices");
+        depBudget();
+      }
+
       if (choices === "Quit") {
         process.exit();
       }
@@ -365,6 +371,19 @@ const managerEmp = async () => {
   try {
     const sql =
       'SELECT CONCAT(manager.first_name," ",manager.last_name) AS manager,CONCAT(employee.first_name," ",employee.last_name) AS employee FROM employee join employee AS manager ON employee.manager_id = manager.id';
+    const [rows] = await db.promise().query(sql);
+    console.table(rows);
+    main();
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const depBudget = async () => {
+  console.log(" Department  Salary");
+  try {
+    const sql =
+      "SELECT department.dep_name, sum(role.salary) AS Budget FROM department LEFT JOIN role ON department.id = role.department_id GROUP BY department.id ORDER BY department.id";
     const [rows] = await db.promise().query(sql);
     console.table(rows);
     main();
