@@ -1,7 +1,5 @@
 const inquirer = require("inquirer");
 require("console.table");
-const mysql = require("mysql2");
-//require("dotenv").config();
 const db = require("./db/connection");
 
 //main function
@@ -54,15 +52,12 @@ const main = () => {
         updateEmployee();
       }
       if (choices === "Delete Employee Role") {
-        //console.log("inside choices");
         deleteEmployee();
       }
       if (choices === "View Employee By Manager") {
-        //console.log("inside choices");
         managerEmp();
       }
       if (choices === "Budget") {
-        //console.log("inside choices");
         depBudget();
       }
 
@@ -77,7 +72,7 @@ const showDepartment = async () => {
   console.log("All departments");
   try {
     const sql = "SELECT id,dep_name AS department FROM department";
-    const [rows, fields] = await db.promise().query(sql);
+    const [rows] = await db.promise().query(sql);
     console.table(rows);
     main();
   } catch (err) {
@@ -106,8 +101,8 @@ const showAllEmployees = async () => {
   try {
     const sql =
       'SELECT employee.id,employee.first_name,employee.last_name,role.title,department.dep_name AS department,role.salary,CONCAT(manager.first_name," ",manager.last_name) AS manager FROM employee LEFT join role ON role.id= employee.role_id LEFT join department ON department.id = role.department_id LEFT JOIN employee AS manager ON employee.manager_id = manager.id';
-    //TODO CONCAT(manager.first_name," ",manager.last_name)AS manager
-    const [rows, fields] = await db.promise().query(sql);
+
+    const [rows] = await db.promise().query(sql);
     console.table(rows);
     main();
   } catch (err) {
@@ -237,7 +232,6 @@ const addEmployee = () => {
                   },
                 ])
                 .then((data) => {
-                  // console.log(data);
                   const mgrArray = rows.filter((mgr) => {
                     return mgr.first_name + " " + mgr.last_name == data.mgrRole;
                   });
@@ -287,11 +281,10 @@ const updateEmployee = () => {
         },
       ])
       .then((data) => {
-        // console.log(data);
         const updateEmp = rows.filter((emp) => {
           return emp.first_name + " " + emp.last_name == data.name;
         });
-        // console.log(updateEmp); //updateEmp[0].id
+
         const sql = "SELECT * FROM role";
         db.query(sql, (err, rows) => {
           inquirer
@@ -307,11 +300,10 @@ const updateEmployee = () => {
               },
             ])
             .then((data) => {
-              // console.log(data);
               const newRole = rows.filter((role) => {
                 return role.title == data.role;
               });
-              //console.log(newRole); //newRole[0].id
+
               const sql = "UPDATE employee SET role_id = ? WHERE id = ?";
               db.query(sql, [newRole[0].id, updateEmp[0].id], (err, result) => {
                 if (err) {
@@ -329,7 +321,6 @@ const updateEmployee = () => {
 }; //update Employee
 
 //DELETE an employee from database
-
 const deleteEmployee = () => {
   const sql = "SELECT * FROM employee";
   db.query(sql, (err, rows) => {
@@ -345,11 +336,10 @@ const deleteEmployee = () => {
         },
       ])
       .then((data) => {
-        //console.log(data);
         const deleteEmp = rows.filter((emp) => {
           return emp.first_name + " " + emp.last_name == data.name;
         });
-        // console.log(deleteEmp);
+
         const sql = "DELETE  FROM employee WHERE id = ?";
         db.query(sql, [deleteEmp[0].id], (err, result) => {
           if (err) {
@@ -364,7 +354,7 @@ const deleteEmployee = () => {
   });
 };
 
-//view employee by manager
+//View employee by manager
 
 const managerEmp = async () => {
   console.log(" Employees and their managers ");
@@ -379,6 +369,7 @@ const managerEmp = async () => {
   }
 };
 
+//View Budget ieach department
 const depBudget = async () => {
   console.log(" Department  Salary");
   try {
