@@ -54,7 +54,9 @@ this information is updated in the database
 ```
 Node.js
 Inquirer@8.2.4
-MYSQL/MySQL2
+MySQL2
+dotenv
+console.table package
 
 ```
 
